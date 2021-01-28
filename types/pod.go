@@ -6,8 +6,11 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/json"
+	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/apimachinery/pkg/watch"
+	"k8s.io/client-go/informers"
 	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/tools/cache"
 	"time"
 )
 
@@ -91,4 +94,20 @@ func getNginxPod() *corev1.Pod {
 			},
 		},
 	}
+}
+
+func WatchPod(clientset *kubernetes.Clientset) {
+	informerFactory := informers.NewSharedInformerFactory(clientset, time.Second*30)
+	informerFactory.Core().V1().Pods().Informer().AddEventHandler(cache.ResourceEventHandlerFuncs{
+		AddFunc: func(obj interface{}) {
+			newPod := obj.(*corev1.Pod)
+			fmt.Printf("Pod created: %s\n", newPod.ObjectMeta.Name)
+		},
+		DeleteFunc: func(obj interface{}) {
+			oldPod := obj.(*corev1.Pod)
+			fmt.Printf("Pod deleted: %s\n", oldPod.ObjectMeta.Name)
+		},
+	})
+
+	informerFactory.Start(wait.NeverStop)
 }

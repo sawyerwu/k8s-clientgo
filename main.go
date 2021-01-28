@@ -30,6 +30,9 @@ func main() {
 		panic(err.Error())
 	}
 
+	// waiting for test
+	types.WatchPod(clientset)
+
 	nsObj := &types.SwuNamespace{
 		Name: "demo",
 	}
@@ -37,7 +40,7 @@ func main() {
 	fmt.Println(ns.Name)
 
 	podObj := &types.SwuPod{
-		Name: "nginx-pod",
+		Name:      "nginx-pod",
 		Namespace: nsObj.Name,
 	}
 	pod := podObj.CreatePod(clientset)
@@ -51,8 +54,6 @@ func main() {
 		fmt.Println(pod.Name)
 	}*/
 }
-
-
 
 func homeDir() string {
 	if h := os.Getenv("HOME"); h != "" {
