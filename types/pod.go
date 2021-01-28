@@ -4,6 +4,8 @@ import (
 	"fmt"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/apimachinery/pkg/util/json"
 	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/kubernetes"
 	"time"
@@ -55,6 +57,24 @@ func (swuPod *SwuPod) CreatePod(clientset *kubernetes.Clientset) *corev1.Pod {
 	}()
 
 	return result
+}
+
+func (swuPod *SwuPod) CreatePatch(clientset *kubernetes.Clientset) *corev1.Pod {
+	patchTemplate := map[string]interface{}{
+		"metadata": map[string]interface{}{
+			"labels": map[string]interface{}{
+				"labelkey": "labelvaule",
+			},
+		},
+	}
+
+	patchData, _ := json.Marshal(patchTemplate)
+	patchedPod, err := clientset.CoreV1().Pods(swuPod.Namespace).Patch(swuPod.Name, types.StrategicMergePatchType, patchData)
+	if err != nil {
+		panic(err.Error())
+	}
+
+	return patchedPod
 }
 
 func getNginxPod() *corev1.Pod {
